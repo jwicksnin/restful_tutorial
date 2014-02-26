@@ -2,8 +2,9 @@ var application_root = __dirname,
   express = require("express"),
   path = require("path"),
   mongoose = require("mongoose");
+  schemas = require("./schemas");
 
-var app = express();
+var app = express(); //create server is deprecated
 
 mongoose.connect('mongodb://localhost/ecomm_database');
 
@@ -17,11 +18,17 @@ app.configure(function () {
 
 var Schema = mongoose.Schema;
 
+// Product schema
+
 var Product = new Schema({
   title: { type: String, required: true },
   description: { type: String, unique: true },
   style: { type: String, unique: true },
-  modified: { type: Date, default: Date.now }
+  modified: { type: Date, default: Date.now },
+  images: [schemas.Images],
+  categories: [schemas.Categories],
+  catalogs: [schemas.Catalogs],
+  variants: [schemas.Variants]
 });
 
 var ProductModel = mongoose.model('Product', Product);
@@ -33,8 +40,8 @@ app.get('/', function (req, res) {
 app.get('/api/products', function (req, res){ //req is an object based on user input
   return ProductModel.find(function (err, products) {
     if (!err) {
-      var item = products[0].title;
-      return res.send(item);
+      // var item = products[0].title;
+      return res.send(products);
     } else {
       return console.log(err);
     }
@@ -45,11 +52,7 @@ app.post('/api/products', function (req, res){
   var product;
   console.log("POST: ");
   console.log(req.body);
-  product = new ProductModel({
-    title: req.body.title,
-    description: req.body.description,
-    style: req.body.style,
-  });
+  product = new ProductModel(req.body);
   product.save(function (err) {
     if (!err) {
       return console.log("created");
